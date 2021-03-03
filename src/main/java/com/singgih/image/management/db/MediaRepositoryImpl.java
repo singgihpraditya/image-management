@@ -18,35 +18,53 @@ public class MediaRepositoryImpl implements MediaRepository {
 	private JdbcTemplate jdbcTemplate;
 
 	public int save(String hashCode, Media media) {
-		logger.debug(hashCode + "Insert new media : " + media.getId());
-		return jdbcTemplate.update("insert into media (id, original_file_name, original_path,file_type) values(?)", media.getId());
+		logger.debug(hashCode + "Insert into db : "+media.toString());
+		String sqlQuery = "insert into media (id, original_file_name, original_path, file_type, checksum) values(?,?,?,?,?)";
+		Object[] param =  new Object[] { media.getId(), 
+				media.getOriginalFileName(), 
+				media.getOriginalPath(), 
+				media.getFileType(),
+				media.getCheckSum()
+				};
+		
+		logger.debug(hashCode + "SQL Query : "+sqlQuery);
+		logger.debug(hashCode + "SQL Param : "+param);
+		
+		int result = jdbcTemplate.update(sqlQuery, param);
+		logger.debug(hashCode + "Result : "+result);
+		return result;
 	}
 
 	@Override
 	public Media getMediaByChecksum(String hashCode, String checksum) {
+		logger.debug(hashCode + "Get from db checksum : "+checksum);
 		String sqlQuery = "select * from media where checksum=?";
 		Object[] param =  new Object[] { checksum };
 		
 		logger.debug(hashCode + "SQL Query : "+sqlQuery);
 		logger.debug(hashCode + "SQL Param : "+param);
 		
-		return jdbcTemplate.queryForObject(sqlQuery, param, new MediaRowMapper());
+		Media result =  jdbcTemplate.queryForObject(sqlQuery, param, new MediaRowMapper());
+		return result;
 
 	}
 
 	@Override
 	public Media getMediaByNameAndSize(String hashCode, String fileName, long fileSize) {
+		logger.debug(hashCode + "Get from db original_file_name : "+fileName+", file_size : "+fileSize);
 		String sqlQuery = "select * from media where original_file_name=? and file_size=?";
 		Object[] param =   new Object[] { fileName, fileSize };
 		
 		logger.debug(hashCode + "SQL Query : "+sqlQuery);
 		logger.debug(hashCode + "SQL Param : "+param);
 		
-		return jdbcTemplate.queryForObject(sqlQuery, param, new MediaRowMapper());
+		Media result = jdbcTemplate.queryForObject(sqlQuery, param, new MediaRowMapper());
+		return result;
 	}
 	
 	@Override
 	public int updateMedia(String hashCode, Media media) {
+		logger.debug(hashCode + "Update into db : "+media.toString());
 		String sqlQuery = "update media set checksum = ?,"
                 + " original_file_name = ?,"
                 + " new_file_name = ?,"
@@ -78,10 +96,10 @@ public class MediaRepositoryImpl implements MediaRepository {
 		
 		logger.debug(hashCode + "SQL Query : "+sqlQuery);
 		logger.debug(hashCode + "SQL Param : "+param);
-		
-        return jdbcTemplate.update(sqlQuery,
-        			param
-                );
+
+        int result = jdbcTemplate.update(sqlQuery, param);
+        logger.debug(hashCode + "Result : "+result);
+		return result;
 
 	}
 }
